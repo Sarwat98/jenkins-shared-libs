@@ -28,7 +28,7 @@ def call(Map config = [:]) {
             stage('Checkout vProfile') {
                 steps {
                     git url: 'https://github.com/Sarwat98/vprofile-project.git', 
-                         branch: config.gitBranch ?: 'main'
+                         branch: config.gitBranch ?: 'master'
                 }
             }
             
