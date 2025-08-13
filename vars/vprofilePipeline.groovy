@@ -49,17 +49,21 @@ def call(Map config = [:]) {
                 }
             }
             
-            stage('Push to DockerHub') {
+            stage('Push Docker Image') {
                 steps {
-                    script {
-                        docker.withRegistry(
-                            "https://${env.DOCKER_REGISTRY}", 
-                            config.dockerCreds ?: 'dockercred'
-                        ) {
-                            docker.image("${env.IMAGE_NAME}:${env.IMAGE_TAG}").push()
-                            docker.image("${env.IMAGE_NAME}:latest").push()
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockercred',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        script {
+                            sh '''
+                                docker login -u "$DOCKER_USER" -p "$DOCKER_PASS" docker.io
+                                docker push "${IMAGE_NAME}:${IMAGE_TAG}"
+                                docker logout
+                            '''
                         }
-                    }
+                    }    
                 }
             }
         }
