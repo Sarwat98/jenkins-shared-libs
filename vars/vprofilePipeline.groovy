@@ -1,4 +1,10 @@
+// vars/vprofilePipeline.groovy
 def call(Map config = [:]) {
+    // Validate required parameters
+    if (!config.imageName) {
+        error("imageName parameter is required")
+    }
+
     pipeline {
         agent any
         
@@ -7,9 +13,9 @@ def call(Map config = [:]) {
         }
         
         environment {
-            DOCKER_REGISTRY = config.dockerRegistry ?: 'docker.io'
-            IMAGE_NAME = config.imageName
-            IMAGE_TAG = config.imageTag ?: "${env.BUILD_NUMBER}"
+            DOCKER_REGISTRY = "${config.dockerRegistry ?: 'docker.io'}"
+            IMAGE_NAME = "${config.imageName}"
+            IMAGE_TAG = "${config.imageTag ?: env.BUILD_NUMBER}"
         }
         
         stages {
@@ -36,7 +42,7 @@ def call(Map config = [:]) {
                 steps {
                     script {
                         docker.build(
-                            "${IMAGE_NAME}:${IMAGE_TAG}",
+                            "${env.IMAGE_NAME}:${env.IMAGE_TAG}",
                             "-f ${config.dockerfile ?: 'Dockerfile'} ."
                         )
                     }
@@ -47,11 +53,11 @@ def call(Map config = [:]) {
                 steps {
                     script {
                         docker.withRegistry(
-                            "https://${DOCKER_REGISTRY}", 
+                            "https://${env.DOCKER_REGISTRY}", 
                             config.dockerCreds ?: 'dockercred'
                         ) {
-                            docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
-                            docker.image("${IMAGE_NAME}:latest").push()
+                            docker.image("${env.IMAGE_NAME}:${env.IMAGE_TAG}").push()
+                            docker.image("${env.IMAGE_NAME}:latest").push()
                         }
                     }
                 }
